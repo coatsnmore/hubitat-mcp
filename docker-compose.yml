@@ -1,0 +1,26 @@
+---
+services:
+  hubitat-mcp-docker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: hubitat-mcp-docker:0.0.1
+    container_name: hubitat-mcp-docker
+    environment:
+      - HOST=http://192.168.86.30/apps/api/43/
+      - ACCESS_TOKEN=48e363b2-5c89-4efc-9533-d65f805c6088
+      - MCP_HOST=0.0.0.0
+      - MCP_PORT=8888
+    volumes:
+      # Mount the current directory to /app in the container for hot reloading
+      - .:/app
+      # Create an anonymous volume for .venv so Windows venv doesn't break Linux venv
+      - /app/.venv
+    # Clear the Dockerfile ENTRYPOINT so we can run our custom sh command
+    entrypoint: []
+    ports:
+      # Expose port for HTTP development testing
+      - "8888:8888"
+    # Install dependencies, run watchfiles to auto-reload on src/ directory changes
+    command: sh -c "uv sync && uvx watchfiles 'uv run hubitat-mcp --http' src"
+    restart: unless-stopped

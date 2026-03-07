@@ -1,0 +1,18 @@
+[project]
+name = "hubitat-mcp"
+version = "0.1.0"
+description = "Hubitat MCP Server"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastmcp>=0.1.0",
+    "python-dotenv>=1.0.0",
+    "requests>=2.31.0",
+]
+
+[project.scripts]
+hubitat-mcp = "hubitat_mcp.server:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
