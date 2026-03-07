@@ -95,7 +95,7 @@ This configuration enables the client to start the container automatically via `
         "HOST=http://192.168.86.28/apps/api/43/",
         "-e",
         "ACCESS_TOKEN=47e363b2-5c89-4efc-9533-d65f805c6088",
-        "hubitat-mcp-docker:0.0.1"
+        "coatsnmore/hubitat-mcp:0.0.1"
       ],
       "trust": true
     }
