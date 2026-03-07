@@ -6,11 +6,8 @@ services:
       dockerfile: Dockerfile
     image: hubitat-mcp-docker:0.0.1
     container_name: hubitat-mcp-docker
-    environment:
-      - HOST=http://192.168.86.30/apps/api/43/
-      - ACCESS_TOKEN=48e363b2-5c89-4efc-9533-d65f805c6088
-      - MCP_HOST=0.0.0.0
-      - MCP_PORT=8888
+    env_file:
+      - .env
     volumes:
       # Mount the current directory to /app in the container for hot reloading
       - .:/app

@@ -21,12 +21,17 @@ The server provides the following tools:
 
 ## Configuration
 
-The server requires two environment variables to communicate with your hub:
+The server requires two high-level environment variables to communicate with your hub. For ease of development, you can manage these in a `.env` file.
 
-*   `HOST`: The base URL pointing to the Maker API app. Examples: `http://192.168.1.50/apps/api/33` or `http://hubitat.local/apps/api/33`
-*   `ACCESS_TOKEN`: The access token provided in the Maker API configuration page.
+1.  Copy `.env.example` to `.env`.
+2.  Fill in your specific details:
 
-> **Note:** Do *not* put the `?access_token=...` parameter directly into the `HOST` variable; it should only contain the base URL path up to the App ID.
+*   `HOST`: The base URL pointing to the Maker API app (e.g., `http://192.168.1.50/apps/api/33`).
+*   `ACCESS_TOKEN`: Your Maker API access token.
+*   `MCP_HOST`: (Optional) Host to bind for HTTP/SSE (default: `0.0.0.0`).
+*   `MCP_PORT`: (Optional) Port to bind for HTTP/SSE (default: `8888`).
+
+> **Note:** The `HOST` should only contain the base URL path up to the App ID; do *not* include the `?access_token=...` parameter in this variable.
 
 ## Docker Usage
 
@@ -132,12 +137,12 @@ Written in Python and packaged using `uv`.
 
 ```bash
 # Clone the repo
-git clone <this-repo>
+git clone https://github.com/coatsnmore/hubitat-mcp.git
 cd hubitat-mcp
 
-# Copy env template and fill it out
-touch .env
-# Edit .env to contain HOST=... and ACCESS_TOKEN=...
+# Setup environment variables
+cp .env.example .env
+# Edit .env to contain your HUBITAT_HOST and HUBITAT_TOKEN
 
 # Run directly via uv
 uv run hubitat-mcp
