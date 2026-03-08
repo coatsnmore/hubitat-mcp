@@ -14,10 +14,11 @@ services:
       # Create an anonymous volume for .venv so Windows venv doesn't break Linux venv
       - /app/.venv
     # Clear the Dockerfile ENTRYPOINT so we can run our custom sh command
-    entrypoint: []
+    # entrypoint: ["--http-only"]
     ports:
       # Expose port for HTTP development testing
-      - "8888:8888"
+      - "8887:8888"
     # Install dependencies, run watchfiles to auto-reload on src/ directory changes
-    command: sh -c "uv sync && uvx watchfiles 'uv run hubitat-mcp --http' src"
+    # command: sh -c "uv sync && uvx watchfiles 'uv run hubitat-mcp --http-only' src"
+    command: ["--http-only"]
     restart: unless-stopped

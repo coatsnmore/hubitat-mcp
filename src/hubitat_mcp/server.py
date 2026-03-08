@@ -107,29 +107,17 @@ def control_device(device_id, command):
 
 async def async_main():
     """Async main entry point for the hubitat MCP server."""
-    port_env = os.getenv("MCP_PORT")
-    port = int(port_env) if port_env else 8888
-    tasks = []
-
-    if "--http" in sys.argv or port_env:
-        # If explicitly requested or port is defined, we can run HTTP
+    if "--http-only" in sys.argv:
+        port_env = os.getenv("MCP_PORT")
+        port = int(port_env) if port_env else 8888
         host = os.getenv("MCP_HOST", "0.0.0.0")
         logger.info(f"Starting Hubitat MCP HTTP server on {host}:{port}")
-        
-        # Add HTTP server task
-        tasks.append(mcp.run_http_async(transport="streamable-http", host=host, port=port))
-        
-        if "--http-only" in sys.argv:
-            # Only run the HTTP server
-            await tasks[0]
-            return
+        await mcp.run_http_async(transport="streamable-http", host=host, port=port)
+        return
 
-    # Always add stdio to the tasks
+    # Default to stdio
     logger.info("Starting Hubitat MCP server on stdio")
-    tasks.append(mcp.run_stdio_async())
-
-    # Run both concurrently
-    await asyncio.gather(*tasks)
+    await mcp.run_stdio_async()
 
 def main():
     """Main entry point for the hubitat MCP server."""
