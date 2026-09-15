@@ -28,10 +28,25 @@ The server requires two high-level environment variables to communicate with you
 
 *   `HOST`: The base URL pointing to the Maker API app (e.g., `http://192.168.1.50/apps/api/33`).
 *   `ACCESS_TOKEN`: Your Maker API access token.
-*   `MCP_HOST`: (Optional) Host to bind for HTTP/SSE (default: `0.0.0.0`).
-*   `MCP_PORT`: (Optional) Port to bind for HTTP/SSE (default: `8888`).
+*   `MCP_HOST`: (Optional) Host to bind for HTTP (default: `0.0.0.0`).
+*   `MCP_PORT`: (Optional) Port to bind for HTTP (default: `8888`).
 
 > **Note:** The `HOST` should only contain the base URL path up to the App ID; do *not* include the `?access_token=...` parameter in this variable.
+
+## Transport Modes
+
+Hubitat MCP operates in one of two transport modes:
+
+1. **STDIO Mode (Default)**:
+   - Active by default when running without `--http-only`.
+   - Communicates over standard input and standard output (`stdio`).
+   - Ideal for local desktop MCP clients (such as Claude Desktop, Cursor, OpenCode, Antigravity) that manage and run the server process directly.
+
+2. **Streamable HTTP Mode (`--http-only`)**:
+   - Activated by passing the `--http-only` command-line argument.
+   - Starts an HTTP server on `MCP_HOST:MCP_PORT` (default: `0.0.0.0:8888`) exposing the `/mcp` endpoint using FastMCP's **Streamable HTTP** transport.
+   - Ideal for running as a persistent background service (e.g., via Docker Compose) or for inspecting and testing tools with the MCP Inspector.
+   - *Note: Legacy SSE is not used; Streamable HTTP is the modern transport protocol.*
 
 ## Docker Usage
 
@@ -42,54 +57,66 @@ The recommended way to use this server is via Docker.
 Clone the repository and build the container locally:
 
 ```bash
-docker build -t your-dockerhub-username/hubitat-mcp:latest .
+docker build -t coatsnmore/hubitat-mcp:0.0.3 .
 ```
 
 *Optionally, push it to your registry:*
 ```bash
-docker push your-dockerhub-username/hubitat-mcp:latest
+docker push coatsnmore/hubitat-mcp:0.0.3
 ```
 
-### Running testing locally
+### Running in STDIO Mode (Default)
 
-You can run the server directly via Docker, streaming over STDIO.
-Note: Because it communicates with a local network device (Hubitat), ensure the Docker container has network access to the hub's IP.
+Run the container interactively with `-i` (and **no** `-t` flag):
 
 ```bash
-docker.exe run -i --rm \
+docker run -i --rm \
     -e HOST="http://YOUR_HUBITAT_IP/apps/api/YOUR_APP_ID" \
     -e ACCESS_TOKEN="YOUR_MAKER_API_TOKEN" \
-    hubitat-mcp-docker:0.0.1
+    coatsnmore/hubitat-mcp:0.0.3
+```
+> **Note:** Ensure the Docker container has network access to your Hubitat hub IP. On Windows (Git Bash / Mintty), use `docker.exe` to avoid TTY issues.
+
+### Running in Streamable HTTP Mode (`--http-only`)
+
+To run the server in Streamable HTTP mode in the background, pass `--http-only` and publish the port:
+
+```bash
+docker run -d --rm \
+    -p 8888:8888 \
+    -e HOST="http://YOUR_HUBITAT_IP/apps/api/YOUR_APP_ID" \
+    -e ACCESS_TOKEN="YOUR_MAKER_API_TOKEN" \
+    coatsnmore/hubitat-mcp:0.0.3 --http-only
+```
+
+#### Using Docker Compose
+
+Alternatively, use `docker compose` which is preconfigured to run with `--http-only`:
+
+```bash
+docker compose up -d
 ```
 
 ### Using the MCP Inspector (Development)
 
-For development on Windows, it is often easier to use the **SSE (HTTP)** transport to avoid console/TTY issues.
+When running in HTTP mode, you can inspect and debug tools using the MCP Inspector:
 
-1. Start the server via Docker Compose:
-   ```bash
-   docker compose up -d
-   ```
-2. Run the inspector pointing to the local HTTP endpoint:
-   ```bash
-   npx @modelcontextprotocol/inspector http://localhost:8888/mcp
-   ```
+```bash
+npx @modelcontextprotocol/inspector http://localhost:8888/mcp
+```
+*(Note: If using `docker-compose.yml` with host port mapping `8887:8888`, connect to `http://localhost:8887/mcp` instead).*
 
 ## Adding to an MCP Client
 
-Clients like [Agentic IDEs](https://modelcontextprotocol.io/) or chat applications look for an `mcp.json` or comparable configuration to connect to tools.
+Clients like [Agentic IDEs](https://modelcontextprotocol.io/) or chat applications connect via an `mcp.json` or client configuration.
 
-Use the `command` and `args` to directly execute the Docker container when the client starts.
+### Option 1: STDIO via Docker (Recommended for Desktop Clients)
 
-### Example `mcp.json` (Recommended)
-
-This configuration enables the client to start the container automatically via `stdio` while also exposing port `8888` so you can use the **MCP Inspector** or other tools simultaneously.
-
-> **Note:** On Windows, use `docker.exe` to avoid shell/TTY issues.
+This configuration enables the client to start the container on demand via `stdio`:
 
 ```json
 {
- "mcpServers": {
+  "mcpServers": {
     "hubitat": {
       "command": "docker",
       "args": [
@@ -97,10 +124,10 @@ This configuration enables the client to start the container automatically via `
         "-i",
         "--rm",
         "-e",
-        "HOST=http://192.168.86.28/apps/api/43/",
+        "HOST=http://YOUR_HUBITAT_IP/apps/api/YOUR_APP_ID",
         "-e",
-        "ACCESS_TOKEN=47e363b2-5c89-4efc-9533-d65f805c6088",
-        "coatsnmore/hubitat-mcp:0.0.1"
+        "ACCESS_TOKEN=YOUR_MAKER_API_TOKEN",
+        "coatsnmore/hubitat-mcp:0.0.3"
       ],
       "trust": true
     }
@@ -108,12 +135,12 @@ This configuration enables the client to start the container automatically via `
 }
 ```
 
-### Alternative: Persistent Server (Docker Compose)
+> **Note for Windows:** Use `"command": "docker.exe"` in your configuration to bypass Git Bash / Mintty shell aliases that inject a pseudo-TTY.
 
-If you prefer to keep the server running in the background and connect via HTTP/SSE:
+### Option 2: Streamable HTTP via Persistent Server
 
-1. Start the server: `docker compose up -d`
-2. Use this `mcp.json` (requires client support for URL transport):
+If you keep the server running in the background (via `docker compose up -d` or `docker run ... --http-only`):
+
 ```json
 {
   "mcpServers": {
@@ -123,6 +150,7 @@ If you prefer to keep the server running in the background and connect via HTTP/
   }
 }
 ```
+*(Note: Requires client support for remote HTTP/Streamable HTTP MCP endpoints).*
 
 ### Windows Shell Notes (Git Bash / Mintty)
 
@@ -142,8 +170,11 @@ cd hubitat-mcp
 
 # Setup environment variables
 cp .env.example .env
-# Edit .env to contain your HUBITAT_HOST and HUBITAT_TOKEN
+# Edit .env to contain your HOST and ACCESS_TOKEN
 
-# Run directly via uv
+# Run using STDIO (default):
 uv run hubitat-mcp
+
+# Run using Streamable HTTP:
+uv run hubitat-mcp --http-only
 ```

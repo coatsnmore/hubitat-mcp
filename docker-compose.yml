@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: hubitat-mcp-docker:0.0.1
+    image: coatsnmore/hubitat-mcp:0.0.3
     container_name: hubitat-mcp-docker
     env_file:
       - .env
