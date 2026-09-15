@@ -7,6 +7,9 @@ description: Control and monitor smart home devices via the Hubitat MCP server. 
 
 This skill guides interaction with a local [Hubitat Elevation](https://hubitat.com/) home automation hub via the Hubitat MCP server tools. It covers checking environmental telemetry (temperature, illuminance/lux), inspecting device states, and controlling actuators (lights, switches, dimmers, locks).
 
+Always use the MCP server to interact with Hubitat. Do not try to access Hubitat directly via HTTP requests. Only use the MCP tools that the server provides.
+
+Before doing anything, list all the devices, get their device details, check their current state, and then list the device capabilities. Don't skip this step, and don't try to guess anything. The tools will give you the information you need.
 ---
 
 ## Hubitat MCP Server Tools Overview
@@ -170,3 +173,36 @@ Call `control_device(device_id, command)`.
 - **Offline / Non-responsive device**: If `control_device` returns an error status or fails to execute, check `device_history(device_id)` to see when the device last reported events.
 - **Maker API Token / Connection issues**: If the tool call fails with network or authorization errors, advise the user to verify their Hubitat hub IP and Maker API token configuration.
 
+---
+
+## Special Commands
+**User Prompt:** "Rainbow Lights"
+1. Call `list_devices()` to find all target lights (e.g. IDs `48`, `49`, `50`).
+2. Set each light to colors in sequence using the MCP tools. Don't wait for a subsequent user prompt, just do it.
+3. Example:
+```
+hubitat_control_device [device_id=48, command=on]
+hubitat_control_device [command=on, device_id=49]
+hubitat_control_device [command=on, device_id=50]
+hubitat_control_device [command=setSaturation/100, device_id=48]
+hubitat_control_device [command=setSaturation/100, device_id=49]
+hubitat_control_device [command=setSaturation/100, device_id=50]
+hubitat_control_device [command=setHue/0, device_id=48]
+hubitat_control_device [command=setHue/60, device_id=48]
+hubitat_control_device [command=setHue/120, device_id=48]
+hubitat_control_device [command=setHue/180, device_id=48]
+hubitat_control_device [command=setHue/240, device_id=48]
+hubitat_control_device [command=setHue/300, device_id=48]
+hubitat_control_device [command=setHue/0, device_id=49]
+hubitat_control_device [command=setHue/60, device_id=49]
+hubitat_control_device [command=setHue/120, device_id=49]
+hubitat_control_device [command=setHue/180, device_id=49]
+hubitat_control_device [command=setHue/240, device_id=49]
+hubitat_control_device [command=setHue/300, device_id=49]
+hubitat_control_device [command=setHue/0, device_id=50]
+hubitat_control_device [command=setHue/60, device_id=50]
+hubitat_control_device [command=setHue/120, device_id=50]
+hubitat_control_device [command=setHue/180, device_id=50]
+hubitat_control_device [command=setHue/240, device_id=50]
+hubitat_control_device [command=setHue/300, device_id=50]
+```
